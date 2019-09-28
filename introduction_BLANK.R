@@ -331,6 +331,15 @@ setwd("C:/Users/Natasha/projects/AFS_IntroR/")
 list.files()
 
 # 3. Import the data
-
+data <- read.csv("KingsCreekFishSurveys.csv")
 
 # ---- Exploring Data Frames ----
+View(data)
+dim(data)
+nrow(data)
+ncol(data)
+head(data)
+tail(data)
+names(data)
+summary(data)
+str(data)
