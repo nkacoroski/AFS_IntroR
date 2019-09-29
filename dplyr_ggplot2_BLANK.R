@@ -310,18 +310,33 @@ data_tb <- data_tb %>%
 
 # ---- Dealing with dates and times with {lubridate} ----
 # ymd() : takes a string representing year-month-day and converts it to a date
-
+testdate <- "2019-10-03"
+testdate
+checkdate <- ymd(testdate)
+class(checkdate)
 
 # Goal: Combine year, month, and day into a format that can be 
 # converted to a date
+ymd(paste("2019", "10", "03", sep = "-"))
 
+data_tb %>%
+  mutate(date = ymd(paste(year, month, day, sep = "-"))) %>%
+  glimpse()
 
 # ---- Capstone {dplyr} Exercise ----
 ## Create a summary table called "table1" that contains the
 # total, mean, maximum, and minimum number of Central Stonerollers
 # captured by year, site, and habitat
 
+table1 <- data_tb %>%
+  filter(common_name == "Central Stoneroller") %>%
+  group_by(year, site, habitat) %>%
+  summarise(total = sum(count, na.rm == TRUE),
+            mean = mean(count, na.rm == TRUE),
+            max = max(count, na.rm == TRUE),
+            min = min(count, na.rm == TRUE))
 
+table1
 # ---- Visualizations in {ggplot2} ----
 # Any visualization has three components:
 # 1. a data set (What are you trying to look at?)
@@ -331,59 +346,83 @@ data_tb <- data_tb %>%
 
 # ---- Starting with ggplot() ----
 # Initialize ggplot()
-
+ggplot()
 
 # 1. Specify a data set
-
+ggplot(data_tb)
 
 # 2. Specify a coordinate system
-
+ggplot(data_tb, aes(x = year, y = count))
 
 # 3. Specify a geom
+ggplot(data_tb, aes(x = year, y = count)) +
+  geom_point()
 
+ggplot(data_tb) +
+  geom_point(aes(x = year, y = count))
 
 # Goal: Create a boxplot with site on the x axis and area on the y axis
 # Remember that this is simulated data!
-
+ggplot(data_tb, aes(x = site, y = area)) +
+  geom_boxplot()
 
 ## What happens if a continuous variable is used on the x axis?
-
+ggplot(data_tb, aes(x = as.factor(year), y = area)) +
+  geom_boxplot()
 
 # Goal: Create a histogram of area sampled
-
+ggplot(data_tb) +
+  geom_histogram(aes(x = area))
 
 # ---- Adding Colour ----
-## Create a scatterplot of mean number of individuals captured by year
-
+## Create a scatterplot of number of individuals captured by year
+ggplot(data_tb) +
+  geom_point(aes(x = year, y = count))
 
 # Goal: Make points blue  
+ggplot(data_tb) +
+  geom_point(aes(x = year, y = count), col = "blue")
 ## Can you explain why this happens?
-
+# assistant gets confused...
 ## How would you fix this?
-
+# move out of assistant function
 
 # Goal: Make the color of each point based on the month
-
+ggplot(data_tb) +
+  geom_point(aes(x = year, y = count, col = month))
 
 # Goal: Make the color of each point based on site
-
+ggplot(data_tb) +
+  geom_point(aes(x = year, y = count, col = site))
 
 # ---- ggplot() as an Object ----
 # Store ggplot plots as an object
+plot1 <- ggplot(data_tb) +
+  geom_point(aes(x = year, y = count, col = site))
+
+plot1
 
 # Goal: Add labels on x and y axis
-
+plot2 <- plot1 +
+  xlab("Year") +
+  ylab("Number Captured")
 
 # Goal: Tidy up the background colours
+plot3 <- plot2 +
+  theme_bw()
 
-
+plot3
 # ---- Facetting ----
 # Goal: Add a layer to plot3 that creates a separate panel for each habitat type
-
+plot3 +
+  facet_wrap(~habitat)
 
 # Goal: Arrange the panels as a single column
+plot3 +
+  facet_wrap(~habitat, ncol = 1, scales = "free_y")
 
-
+plot3 +
+  facet_grid(habitat~site)
 # ---- Capstone {ggplot2} Exercise ----
 # Reproduce the plot found here:
 # https://github.com/DanielleQuinn/OTN_workshop/blob/master/GapMinderReport.pdf
@@ -399,6 +438,42 @@ data_tb <- data_tb %>%
 
 # data preparation:
 # (1) subset table1 to only include samples from pools
+# 1
+pool_data <- table1 %>%
+  filter(between(year, 2000, 2015),
+         habitat == "pool")
+
+pool_data
+
+ggplot(pool_data) +
+  geom_point(aes(x = year, y = mean))
+
+# 2
+pool_data <- table1 %>%
+  filter(between(year, 2000, 2015),
+         habitat == "pool") %>%
+  ggplot() +
+  geom_point(aes(x = year, y = mean))
+
+# or 3
+myfigure <- ggplot(table1 %>%
+         filter(between(year, 2000, 2015),
+                habitat == "pool"), aes(x = year, y = mean, col = site))  +
+  geom_point(shape = "triangle", size = 4) +
+  geom_line() +
+  geom_line(aes(x = year, y = max), linetype = 'dashed') +
+  geom_line(aes(x = year, y = min), linetype = 'dashed') +
+  xlab("Year") +
+  ylab("Mean Number Caught") +
+  theme_bw() +
+  facet_wrap(~site, ncol = 1, scales = "free_y") +
+  ggtitle("Mean number of Central Stonerollers captured in pools between 2000 and 2015") +
+  scale_color_manual(values = c("red", "blue", "purple", "orange", "black"), name = "SITE ID")
+  
+
+myfigure
+
+ggsave("myfigure.png", myfigure)
 
 # creating the plot:
 # (1) Scatterplot with year on x axis and mean on y axis
